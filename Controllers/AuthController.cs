@@ -151,34 +151,36 @@ namespace Authentication_Service.Controllers
         [HttpPost("Signup", Name = "Signup")]
         public async Task<ActionResult> CreateUser([FromBody] SignupModel signupModel)
         {
-
-            if (!ModelState.IsValid)
+            try
             {
-                return BadRequest("User data is invalid.");
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest("User data is invalid.");
+                }
+
+                const int userRoleID = 2;
+
+                User user = new(signupModel.Email, signupModel.Password, userRoleID);
+
+                user.HashPassword(user.Password);
+
+                _context.Users.Add(user);
+
+                await _context.SaveChangesAsync();
+
+                var responseData = new
+                {
+                    user,
+                    isSuccess = true
+                };
+
+                return Ok(responseData);
             }
-
-            if (!signupModel.ConfirmPasswords(signupModel.Password, signupModel.PasswordConfirm))
+            catch (Exception)
             {
-                return BadRequest("Passwords do not match");
+                return BadRequest("Something went wrong");
             }
-            const int userRoleID = 3;
-
-            User user = new(signupModel.Username, signupModel.Email, signupModel.Password, userRoleID);
-            user.HashPassword(user.Password);
-
-            _context.Users.Add(user);
-
-            await _context.SaveChangesAsync();
-
-            var token = await GenerateJwtTokenAsync(user.Email, new[] {"User"}, _jwtKey, _jwtIssuer, _jwtAudience);
-
-            var responseData = new
-            {
-                user,
-                token
-            };
-
-            return Ok(responseData);
+           
         }
 
         [HttpPost("Login", Name = "Login")]
