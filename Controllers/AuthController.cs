@@ -182,6 +182,57 @@ namespace Authentication_Service.Controllers
             }
            
         }
+
+        [Authorize(Roles ="User")]
+        [HttpPatch("UpdatePassword/{email}")]
+        public async Task<ActionResult> UpdatePassword(string email, UserPasswordUpdateModel userPasswordUpdateModel)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest("Invalid Body");
+                }
+
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+
+                if (user == null)
+                {
+                    return BadRequest("not user found with that address");
+                }
+
+                if (userPasswordUpdateModel.NewPassword == userPasswordUpdateModel.CurrentPassword)
+                {
+                    return BadRequest("You must chose a new password");
+                }
+
+                if (userPasswordUpdateModel.NewPassword != userPasswordUpdateModel.NewPasswordConfirm)
+                {
+                    return BadRequest("Both password are not equal");
+                }
+
+                if (!user.VerifyPassword(userPasswordUpdateModel.CurrentPassword, user.Password))
+                {
+                    return BadRequest("Invalid current password");
+                }
+
+                if (userPasswordUpdateModel.NewPassword != userPasswordUpdateModel.NewPasswordConfirm)
+                {
+                    return BadRequest("Both password are not equal");
+                }
+
+                string newPasswordHashed = user.HashPassword(userPasswordUpdateModel.NewPassword);
+                user.Password = newPasswordHashed;
+                await _context.SaveChangesAsync();
+
+                return Ok("Password has been updated successfully");
+            }
+            catch(Exception ex)
+            {
+                return StatusCode(500, $"Errro occurred: {ex.Message}");
+            }
+        }
+
         [Authorize(Roles = "User")]
         [HttpDelete("Delete/{email}", Name = "Delete")]
         public async Task<ActionResult> Delete(string email)
