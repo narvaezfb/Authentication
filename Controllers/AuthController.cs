@@ -182,28 +182,63 @@ namespace Authentication_Service.Controllers
             }
            
         }
+        [Authorize(Roles = "User")]
+        [HttpDelete("Delete/{email}", Name = "Delete")]
+        public async Task<ActionResult> Delete(string email)
+        {
+            try
+            {
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+
+                if (user == null)
+                {
+                    return BadRequest("User not found with that ID");
+                }
+
+                _context.Users.Remove(user);
+                await _context.SaveChangesAsync();
+
+                return Ok("Account deleted");
+
+            }
+            catch (DbUpdateException dbUpdateException)
+            {
+                return BadRequest("Database error occurred: " + dbUpdateException.InnerException?.Message);
+            }
+            catch (Exception e)
+            {
+
+                return StatusCode(500, "An error occurred while processing the request: " + e.Message);
+            }
+        }
 
         [HttpPost("Login", Name = "Login")]
         public async Task<ActionResult> Login([FromBody] Login login)
         {
-            if (!ModelState.IsValid)
+            try
             {
-                return BadRequest(ModelState);
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == login.Email);
+
+                if (user == null || user.VerifyPassword(login.Password, user.Password) == false)
+                {
+                    return BadRequest("Authentication failed");
+                }
+
+                var roles = await createListOfRoles(user.RoleID);
+
+                var token = await GenerateJwtTokenAsync(user.Email, roles, _jwtKey, _jwtIssuer, _jwtAudience);
+
+                return Ok(new { token, user });
             }
-
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == login.Email).ConfigureAwait(false);
-
-            if (user == null || user.VerifyPassword(login.Password, user.Password) == false)
+            catch(Exception ex)
             {
-                return BadRequest("Authentication failed");
+                return StatusCode(500, $"An error ocurred: {ex.Message}" );
             }
-
-            var roles = await createListOfRoles(user.RoleID);
-
-            var token = await GenerateJwtTokenAsync(user.Email, roles, _jwtKey, _jwtIssuer, _jwtAudience);
-
-            return Ok(new { token, user });
-
         }
 
         [HttpPost("ForgotPassword", Name = "ForgotPassword")]

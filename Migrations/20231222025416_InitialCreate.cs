@@ -26,13 +26,23 @@ namespace Authentication_Service.Migrations
                     table.PrimaryKey("PK_Roles", x => x.RoleID);
                 });
 
-            migrationBuilder.CreateTable(
+            // Insert initial records into Roles table
+            migrationBuilder.InsertData(
+                table: "Roles",
+                columns: new[] { "Name", "Description" },
+                values: new object[,]
+                {
+            { "Admin", "Admin Roles" },
+            { "User", "User Role" },
+             });
+        
+
+        migrationBuilder.CreateTable(
                 name: "Users",
                 columns: table => new
                 {
                     UserID = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Username = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
                     Email = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
                     Password = table.Column<string>(type: "text", nullable: false),
                     ResetPasswordToken = table.Column<string>(type: "text", nullable: true),
@@ -60,12 +70,6 @@ namespace Authentication_Service.Migrations
                 name: "IX_Users_RoleID",
                 table: "Users",
                 column: "RoleID");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Users_Username",
-                table: "Users",
-                column: "Username",
-                unique: true);
         }
 
         /// <inheritdoc />

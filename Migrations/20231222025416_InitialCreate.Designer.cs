@@ -11,7 +11,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Authentication_Service.Migrations
 {
     [DbContext(typeof(AuthenticationServiceDbContext))]
-    [Migration("20231221020050_InitialCreate")]
+    [Migration("20231222025416_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -72,20 +72,12 @@ namespace Authentication_Service.Migrations
                     b.Property<int>("RoleID")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Username")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
                     b.HasKey("UserID");
 
                     b.HasIndex("Email")
                         .IsUnique();
 
                     b.HasIndex("RoleID");
-
-                    b.HasIndex("Username")
-                        .IsUnique();
 
                     b.ToTable("Users");
                 });
