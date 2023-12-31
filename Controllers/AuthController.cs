@@ -160,7 +160,7 @@ namespace Authentication_Service.Controllers
 
                 const int userRoleID = 2;
 
-                User user = new(signupModel.Email, signupModel.Password, userRoleID);
+                User user = new(signupModel.UserID, signupModel.Email, signupModel.Password, userRoleID);
 
                 user.HashPassword(user.Password);
 
@@ -170,15 +170,15 @@ namespace Authentication_Service.Controllers
 
                 var responseData = new
                 {
-                    user,
+                    user.UserID,
                     isSuccess = true
                 };
 
                 return Ok(responseData);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return BadRequest("Something went wrong");
+                return BadRequest($"Something went wrong: ${ex.InnerException}");
             }
            
         }
@@ -234,12 +234,12 @@ namespace Authentication_Service.Controllers
         }
 
         [Authorize(Roles = "User")]
-        [HttpDelete("Delete/{email}", Name = "Delete")]
-        public async Task<ActionResult> Delete(string email)
+        [HttpDelete("Delete/{userId}", Name = "Delete")]
+        public async Task<ActionResult> Delete(string userId)
         {
             try
             {
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+                var user = await _context.Users.FindAsync(userId);
 
                 if (user == null)
                 {
