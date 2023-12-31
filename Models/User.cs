@@ -7,7 +7,7 @@ namespace Authentication_Service.Models
 	public class User
 	{
         [Required(ErrorMessage = "UserId is required")]
-        public int UserID { get; set; }
+        public string UserID { get; set; }
 
         [Required(ErrorMessage = "Email is required")]
         [EmailAddress(ErrorMessage = "Invalid email address.")]
@@ -25,8 +25,14 @@ namespace Authentication_Service.Models
 
         public Role? Role { get; set; }
 
-        public User(string email, string password, int roleID)
+        public User()
         {
+            
+        }
+
+        public User(string userId, string email, string password, int roleID)
+        {
+            UserID = userId;
             Email = email;
             Password = password;
             RoleID = roleID;
